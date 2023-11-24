@@ -10,15 +10,17 @@ import org.tensorflow.lite.gpu.CompatibilityList
 import org.tensorflow.lite.task.core.BaseOptions
 import org.tensorflow.lite.support.image.ImageProcessor
 import org.tensorflow.lite.support.image.TensorImage
+import org.tensorflow.lite.support.image.ops.ResizeOp
 import org.tensorflow.lite.task.core.vision.ImageProcessingOptions
-import org.tensorflow.lite.task.vision.classifier.*
+import org.tensorflow.lite.task.vision.classifier.Classifications
+import org.tensorflow.lite.task.vision.classifier.ImageClassifier
 import java.lang.IllegalStateException
 
 class ImageClassifierHelper(
     private var threshold: Float = 0.1f,
     private var maxResults: Int = 3,
     private var numThreads: Int = 4,
-    private var currentDelegate: Int = 2,
+    private var currentDelegate: Int = DELEGATE_GPU,
     private val modelName: String = "1.tflite",
     private val context: Context,
     private val imageClassifierListener: ClassifierListener?,
@@ -55,7 +57,7 @@ class ImageClassifierHelper(
         optionsBuilder.setBaseOptions(baseOptionsBuilder.build())
 
         try {
-            ImageClassifier.createFromFileAndOptions(context, modelName, optionsBuilder.build())
+            imageClassifier = ImageClassifier.createFromFileAndOptions(context, modelName, optionsBuilder.build())
         } catch (e: IllegalStateException) {
             imageClassifierListener?.onError(
                 "Image classifier failed to initialize. See error logs for details"
@@ -79,7 +81,10 @@ class ImageClassifierHelper(
         image.close()
 
         var inferenceTime = SystemClock.uptimeMillis()
-        val imageProcessor = ImageProcessor.Builder().build()
+        val imageProcessor = ImageProcessor.Builder()
+            .add(ResizeOp(224, 224, ResizeOp.ResizeMethod.NEAREST_NEIGHBOR))
+            .build()
+
         val tensorImage = imageProcessor.process(TensorImage.fromBitmap(bitmapBuffer))
 
         val imageProcessingOptions = ImageProcessingOptions.builder()

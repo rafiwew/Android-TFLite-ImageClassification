@@ -49,14 +49,13 @@ class MainActivity : AppCompatActivity() {
 
                 override fun onResults(results: List<Classifications>?, inferenceTime: Long) {
                     runOnUiThread {
-                        results?.let { list ->
-                            if (list.isNotEmpty() && list[0].categories.isNotEmpty()) {
-                                println(list)
+                        results?.let { it ->
+                            if (it.isNotEmpty() && it[0].categories.isNotEmpty()) {
+                                println(it)
                                 val sortedCategories =
-                                    list[0].categories.sortedByDescending { it?.score }
+                                    it[0].categories.sortedByDescending { it?.score }
                                 val displayResult = sortedCategories.joinToString("\n") {
-                                    "${it.label} " + NumberFormat.getPercentInstance()
-                                        .format(it.score).trim()
+                                    "${it.label} " + NumberFormat.getPercentInstance().format(it.score).trim()
                                 }
                                 binding.tvResult.text = displayResult
                             }
@@ -67,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
             val preview = Preview.Builder()
